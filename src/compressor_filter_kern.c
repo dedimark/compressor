@@ -298,6 +298,20 @@ int xdp_program(struct xdp_md *ctx) {
                 return XDP_ABORTED;
             }
 
+            // Check for TCP exclude.
+            if (cfg->tcp_exclude == 1 && iph->protocol == IPPROTO_TCP)
+            {
+                struct tcphdr *tcph = (data + sizeof(struct ethhdr) + (iph->ihl * 4));
+
+                if (tcph + 1 > (struct tcphdr *)data_end)
+                {
+                    return XDP_DROP;
+                } 
+
+                goto endratelimit;
+            }
+
+
             struct ip_addr_history *last_seen = bpf_map_lookup_elem(lru_map, &iph->saddr);
             uint64_t now = bpf_ktime_get_ns();
             if (!last_seen) {
@@ -335,6 +349,8 @@ int xdp_program(struct xdp_md *ctx) {
                     return XDP_DROP;
                 }
             }
+
+            endratelimit:
 
             if (iph->protocol == IPPROTO_UDP) {
                 struct udphdr *udph = data + sizeof(struct ethhdr) + sizeof(struct iphdr);
