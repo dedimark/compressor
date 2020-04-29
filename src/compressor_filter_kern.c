@@ -308,7 +308,11 @@ int xdp_program(struct xdp_md *ctx) {
                     return XDP_DROP;
                 } 
 
-                goto endratelimit;
+                // Make sure SYN and ACK flags are set to 0.
+                if (tcph->ack == 0 && tcph->syn == 0)
+                {
+                    goto endratelimit;
+                }
             }
 
 
