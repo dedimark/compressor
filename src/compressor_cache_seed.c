@@ -98,6 +98,8 @@ void on_server_update(redisAsyncContext *redis, void *reply, void *data) {
         bpf_map_update_elem(arg->cache_map_fd, &arg->rule->bind_addr, &entry, BPF_ANY);
         release_cache_lock();
 
+        fprintf(stdout, "Caching updated...\n");
+
         if (old_data) {
             free(old_data);
         }
