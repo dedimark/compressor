@@ -175,7 +175,7 @@ void *seed_cache(void *arg) {
         fprintf(stderr, "Error connected to redis: %s\n", com_redis->errstr);
         exit(1);
     }
-    redisEnableKeepAlive(com_redis);
+    //redisEnableKeepAlive(com_redis);
 
     redisLibeventAttach(sub_redis, base);
     struct forwarding_rule *rule;
