@@ -227,9 +227,8 @@ int xdp_program(struct xdp_md *ctx) {
                 return XDP_ABORTED;
             }
 
-            uint64_t key = ((uint64_t)iph->saddr << 32) | inner_ip->saddr;
-            struct forwarding_rule *tunnel_rule = bpf_map_lookup_elem(&tunnel_map, &key);
-            if (!tunnel_rule) {
+            struct forwarding_rule *forward_rule = bpf_map_lookup_elem(&forwarding_map, &inner_ip->saddr);
+            if (!forward_rule) {
                 return XDP_DROP;
             }
 
@@ -248,33 +247,27 @@ int xdp_program(struct xdp_md *ctx) {
                 return XDP_DROP;
             }
 
-            uint32_t old_saddr = inner_ip->saddr;
-            inner_ip->saddr = tunnel_rule->bind_addr;
-            inner_ip->check = csum_diff4(old_saddr, inner_ip->saddr, inner_ip->check);
-
             if (inner_ip->protocol == IPPROTO_UDP) {
                 struct udphdr *udph = data + sizeof(struct ethhdr) + sizeof(struct iphdr);
                 if (udph + 1 > (struct udphdr *)data_end) {
                     return XDP_DROP;
                 }
 
-                udph->check = csum_diff4(old_saddr, inner_ip->saddr, udph->check);
-
-                if (ntohs(udph->source) == tunnel_rule->to_port) {
+                if (ntohs(udph->source) == forward_rule->to_port) {
                     uint16_t old_tos = *((uint16_t *)inner_ip);
                     inner_ip->tos = 0x50;
                     inner_ip->check = csum_diff4(old_tos, *((uint16_t *)inner_ip), inner_ip->check);
 
-                    if (ntohs(udph->source) != tunnel_rule->bind_port) {
+                    if (ntohs(udph->source) != forward_rule->bind_port) {
                         uint32_t source = udph->source;
-                        uint32_t dest = ntohs(tunnel_rule->bind_port);
+                        uint32_t dest = ntohs(forward_rule->bind_port);
                         udph->source = dest;
                         udph->check = csum_diff4(source, dest, udph->check);
                     }
 
                     uint8_t *udpdata = data + sizeof(struct ethhdr) + sizeof(struct iphdr) + sizeof(struct udphdr);
                     if (!(udpdata + 5 > (uint8_t *)data_end)) {
-                        if (check_srcds_header(udpdata, 0x49) && tunnel_rule->a2s_info_cache) {
+                        if (check_srcds_header(udpdata, 0x49) && forward_rule->a2s_info_cache) {
                             return bpf_redirect_map(&xsk_map, bpf_get_smp_processor_id(), 0);
                         }
                     }
@@ -285,8 +278,6 @@ int xdp_program(struct xdp_md *ctx) {
                 if (tcph + 1 > (struct tcphdr *)data_end) {
                     return XDP_ABORTED;
                 }
-
-                tcph->check = csum_diff4(old_saddr, inner_ip->saddr, tcph->check);
             }
 
             return XDP_TX;
