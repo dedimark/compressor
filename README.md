@@ -99,9 +99,9 @@ This branch implements multicast communication via IPIP. What this does is it us
 
 Flow is like the following:
 
-Incoming To Forward Server -> **$FORWARDIP** => **$GameServerIP** (Outer IP Header) > **$ClientIP** => **$BindAddress** (Inner IP Header).
+Incoming To Forward Server -> **$ForwardIP** => **$GameServerIP** (Outer IP Header) > **$ClientIP** => **$BindAddress** (Inner IP Header).
 
-Outgoing From Endpoint Server -> **$GameServerIP** => **$FORWARDIP** (Outer IP header) > **$BindAddress** => **$ClientIP** (Inner IP Header).
+Outgoing From Endpoint Server -> **$GameServerIP** => **$ForwardIP** (Outer IP header) > **$BindAddress** => **$ClientIP** (Inner IP Header).
 
 On the endpoint server, you can configure a network namespace like the following:
 
