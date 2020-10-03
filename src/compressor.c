@@ -97,10 +97,32 @@ int main(int argc, char **argv) {
             force_skb = 0;
         }
 
+        // Multicast IP.
+        const char *mIP;
+
+        if (config_lookup_string(&config, "multicast", &mIP) == CONFIG_FALSE)
+        {
+            fprintf(stderr, "Using multicast setup of Compressor and couldn't find multicast IP setting. Setting Compressor to failed state.\n");
+
+            exit(1);
+        }
+
         cfg.rate_limit = rate_limit;
         cfg.new_conn_limit = new_conn_limit;
         cfg.tcp_exclude = tcp_exclude;
         cfg.force_skb = force_skb;
+
+        // Multicast IP.
+        struct in_addr multicast_inaddr;
+
+        if (!inet_aton(mIP, &multicast_inaddr))
+        {
+            fprintf(stderr, "Error parsing multicast IP. Setting Compressor to failed state.\n");
+
+            exit(1);
+        }
+
+        cfg.multicast = multicast_inaddr.s_addr;
 
         int cockpit_enabled = 0;
         config_lookup_bool(&config, "cockpit_enabled", &cockpit_enabled);
