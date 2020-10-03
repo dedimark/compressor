@@ -415,12 +415,6 @@ int xdp_program(struct xdp_md *ctx) {
                         }
                     }
 
-
-                    uint32_t daddr = iph->daddr;
-                    iph->daddr = forward_rule->inner_addr;
-                    iph->check = csum_diff4(daddr, iph->daddr, iph->check);
-                    udph->check = csum_diff4(daddr, iph->daddr, udph->check);
-
                     return forward_packet(ctx, forward_rule, 0x50, cfg);
                 }
 
@@ -437,11 +431,6 @@ int xdp_program(struct xdp_md *ctx) {
 
                 struct forwarding_rule *forward_rule = bpf_map_lookup_elem(&forwarding_map, &iph->daddr);
                 if (forward_rule) {
-                    uint32_t daddr = iph->daddr;
-                    iph->daddr = forward_rule->inner_addr;
-                    iph->check = csum_diff4(daddr, iph->daddr, iph->check);
-                    tcph->check = csum_diff4(daddr, iph->daddr, tcph->check);
-
                     return forward_packet(ctx, forward_rule, 0x00, cfg);
                 }
 
@@ -454,10 +443,6 @@ int xdp_program(struct xdp_md *ctx) {
 
                 struct forwarding_rule *forward_rule = bpf_map_lookup_elem(&forwarding_map, &iph->daddr);
                 if (forward_rule) {
-                    uint32_t daddr = iph->daddr;
-                    iph->daddr = forward_rule->inner_addr;
-                    iph->check = csum_diff4(daddr, iph->daddr, iph->check);
-
                     return forward_packet(ctx, forward_rule, 0x00, cfg);
                 }
 
