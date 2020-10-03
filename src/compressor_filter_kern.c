@@ -61,17 +61,7 @@ struct bpf_map_def SEC("maps") forwarding_map = {
     .max_entries = 256
 };
 
-// Keyed by (dest_ip << 32) | internal_ip to support
-// multiple internal IPs on the same host
 // Map 2
-struct bpf_map_def SEC("maps") tunnel_map = {
-    .type = BPF_MAP_TYPE_HASH,
-    .key_size = sizeof(uint64_t),
-    .value_size = sizeof(struct forwarding_rule),
-    .max_entries = 256
-};
-
-// Map 3
 struct bpf_map_def SEC("maps") xsk_map = {
     .type = BPF_MAP_TYPE_XSKMAP,
     .key_size = sizeof(uint32_t),
@@ -79,7 +69,7 @@ struct bpf_map_def SEC("maps") xsk_map = {
     .max_entries = MAX_CPUS
 };
 
-// Map 4
+// Map 3
 struct bpf_map_def SEC("maps") a2s_info_cache_map = {
     .type = BPF_MAP_TYPE_HASH,
     .key_size = sizeof(uint32_t),
@@ -87,7 +77,7 @@ struct bpf_map_def SEC("maps") a2s_info_cache_map = {
     .max_entries = 255
 };
 
-// Map 5
+// Map 4
 struct bpf_map_def SEC("maps") rate_limit_inner_map = {
     .type = BPF_MAP_TYPE_LRU_HASH,
     .key_size = sizeof(uint32_t),
@@ -95,7 +85,7 @@ struct bpf_map_def SEC("maps") rate_limit_inner_map = {
     .max_entries = LRU_SIZE
 };
 
-// Map 6
+// Map 5
 struct bpf_map_def SEC("maps") rate_limit_map = {
     .type = BPF_MAP_TYPE_ARRAY_OF_MAPS,
     .key_size = sizeof(uint32_t),
@@ -103,7 +93,7 @@ struct bpf_map_def SEC("maps") rate_limit_map = {
     .inner_map_idx = 5
 };
 
-// Map 7
+// Map 6
 struct bpf_map_def SEC("maps") new_conn_map = {
     .type = BPF_MAP_TYPE_PERCPU_ARRAY,
     .key_size = sizeof(uint32_t),
@@ -111,7 +101,7 @@ struct bpf_map_def SEC("maps") new_conn_map = {
     .max_entries = 1
 };
 
-// Map 8
+// Map 7
 struct bpf_map_def SEC("maps") stats_map = {
     .type = BPF_MAP_TYPE_PERCPU_ARRAY,
     .key_size = sizeof(uint32_t),

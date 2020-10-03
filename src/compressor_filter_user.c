@@ -88,40 +88,34 @@ struct compressor_maps *load_xdp_prog(struct forwarding_rule **forwarding, struc
     int forwarding_rules_fd = map_fd[1];
 
     if (!map_fd[2]) {
-        fprintf(stderr, "Error finding tunneling map in XDP program\n");
-        return 0;
-    }
-    int tunnel_map_fd = map_fd[2];
-
-    if (!map_fd[3]) {
         fprintf(stderr, "Error finding XSK map in XDP program\n");
         return 0;
     }
-    int xsk_map_fd = map_fd[3];
+    int xsk_map_fd = map_fd[2];
 
-    if(!map_fd[4]) {
+    if(!map_fd[3]) {
         fprintf(stderr, "Error finding A2S_INFO cache map in XDP program\n");
         return 0;
     }
-    int a2s_cache_map_fd = map_fd[4];
+    int a2s_cache_map_fd = map_fd[3];
 
-    if(!map_fd[6]) {
+    if(!map_fd[4]) {
         fprintf(stderr, "Error finding rate limit map in XDP program\n");
         return 0;
     }
-    int rate_limit_map_fd = map_fd[6];
+    int rate_limit_map_fd = map_fd[4];
 
-    if(!map_fd[7]) {
+    if(!map_fd[6]) {
         fprintf(stderr, "Error finding new connection map in XDP program\n");
         return 0;
     }
-    int new_conn_map_fd = map_fd[7];
+    int new_conn_map_fd = map_fd[6];
 
-    if(!map_fd[8]) {
+    if(!map_fd[7]) {
         fprintf(stderr, "Error finding stats map in XDP program\n");
         return 0;
     }
-    int stats_map_fd = map_fd[8];
+    int stats_map_fd = map_fd[7];
 
 
     init_rate_limit_maps(rate_limit_map_fd);
@@ -158,14 +152,6 @@ struct compressor_maps *load_xdp_prog(struct forwarding_rule **forwarding, struc
         err = bpf_map_update_elem(forwarding_rules_fd, &rule->bind_addr, rule, BPF_NOEXIST);
         if (err) {
             fprintf(stderr, "Store forwarding IP map failed: (err:%d)\n", err);
-            perror("bpf_map_update_elem");
-            return 0;
-        }
-
-        uint64_t key = ((uint64_t)rule->to_addr << 32) | rule->inner_addr;
-        err = bpf_map_update_elem(tunnel_map_fd, &key, rule, BPF_NOEXIST);
-        if (err) {
-            fprintf(stderr, "Store tunnel IP map failed: (err:%d)\n", err);
             perror("bpf_map_update_elem");
             return 0;
         }
