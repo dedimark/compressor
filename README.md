@@ -94,4 +94,26 @@ redis_cache = {
 ```
 Note that all anycast nodes *MUST* use the same redis server for `A2S_INFO` caching to work.
 
+#### Multicast Implementation
+This branch implements multicast communication via IPIP. What this does is it uses the specified IP from the config (the `multicast` config value which should be set to the main forwarding server IP) as the outer IP header's source address and instead of using a LAN internal IP in the inner IP header, we use the bind/Anycast IP.
+
+Flow is like the following:
+
+Incoming To Forward Server -> **$FORWARDIP** => **$GameServerIP** (Outer IP Header) > **$ClientIP** => **$BindAddress** (Inner IP Header).
+
+Outgoing From Endpoint Server -> **$GameServerIP** => **$FORWARDIP** (Outer IP header) > **$BindAddress** => **$ClientIP** (Inner IP Header).
+
+On the endpoint server, you can configure a network namespace like the following:
+
+```
+ip netns add test01
+ip tunnel add ipip01 mode ipip remote $FORWARDIP
+ip link set ipip01 netns test01
+ip netns exec test01 ip addr add $BINDADDR/32 dev ipip01
+ip netns exec test01 ip link set ipip01 up
+ip netns exec test01 ip route add default dev ipip01
+```
+
+Where `$FORWARDIP` is the main IP of the forwarding server and `$BINDADDR` is the public facing IP people are connecting to (e.g. the Anycast IP).
+
 [![ko-fi](https://www.ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/thedreae)
