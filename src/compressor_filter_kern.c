@@ -147,7 +147,7 @@ static __always_inline void swap_dest_src_hwaddr(void *data) {
     p[5] = dst[2];
 }
 
-static __always_inline int forward_packet(struct xdp_md *ctx, struct forwarding_rule *rule, uint8_t tos) {
+static __always_inline int forward_packet(struct xdp_md *ctx, struct forwarding_rule *rule, uint8_t tos, struct config *cfg) {
     // Rule found, add outer IP frame
         if (bpf_xdp_adjust_head(ctx, 0 - (int)sizeof(struct iphdr))) {
             return XDP_ABORTED;
@@ -176,7 +176,7 @@ static __always_inline int forward_packet(struct xdp_md *ctx, struct forwarding_
         new_iph->tos = tos;
         new_iph->tot_len = htons(ntohs(iph->tot_len) + sizeof(struct iphdr));
         new_iph->daddr = rule->to_addr;
-        new_iph->saddr = rule->bind_addr;
+        new_iph->saddr = cfg->multicast;
         update_iph_checksum(new_iph);
 
         return XDP_TX;
@@ -421,7 +421,7 @@ int xdp_program(struct xdp_md *ctx) {
                     iph->check = csum_diff4(daddr, iph->daddr, iph->check);
                     udph->check = csum_diff4(daddr, iph->daddr, udph->check);
 
-                    return forward_packet(ctx, forward_rule, 0x50);
+                    return forward_packet(ctx, forward_rule, 0x50, cfg);
                 }
 
                 return XDP_PASS;
@@ -442,7 +442,7 @@ int xdp_program(struct xdp_md *ctx) {
                     iph->check = csum_diff4(daddr, iph->daddr, iph->check);
                     tcph->check = csum_diff4(daddr, iph->daddr, tcph->check);
 
-                    return forward_packet(ctx, forward_rule, 0x00);
+                    return forward_packet(ctx, forward_rule, 0x00, cfg);
                 }
 
                 return XDP_PASS;
@@ -458,7 +458,7 @@ int xdp_program(struct xdp_md *ctx) {
                     iph->daddr = forward_rule->inner_addr;
                     iph->check = csum_diff4(daddr, iph->daddr, iph->check);
 
-                    return forward_packet(ctx, forward_rule, 0x00);
+                    return forward_packet(ctx, forward_rule, 0x00, cfg);
                 }
 
                 return XDP_DROP;
