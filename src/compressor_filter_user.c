@@ -99,11 +99,11 @@ struct compressor_maps *load_xdp_prog(struct forwarding_rule **forwarding, struc
     }
     int a2s_cache_map_fd = map_fd[3];
 
-    if(!map_fd[4]) {
+    if(!map_fd[5]) {
         fprintf(stderr, "Error finding rate limit map in XDP program\n");
         return 0;
     }
-    int rate_limit_map_fd = map_fd[4];
+    int rate_limit_map_fd = map_fd[5];
 
     if(!map_fd[6]) {
         fprintf(stderr, "Error finding new connection map in XDP program\n");
